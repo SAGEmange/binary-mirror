@@ -1,0 +1,33 @@
+name: Binary Mirror Generator
+
+on:
+  push:
+    paths:
+      - "prompts/*.json"
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Run converter
+        run: |
+          mkdir -p binary
+          for file in prompts/*.json; do
+            python scripts/convert_to_binary.py < $file > binary/$(basename $file)
+          done
+
+      - name: Commit results
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add binary/
+          git commit -m "Auto-generated binary files"
+          git push
